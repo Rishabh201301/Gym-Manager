@@ -1,31 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gym Manager - Student Tracking System</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    <header>
-        <div class="header-content">
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-container">
             <h1>🏋️ Gym Manager</h1>
-            <p>Student Tracking System</p>
+            <p>Admin Login</p>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" required placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required placeholder="Enter password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+                <p id="login-error" style="color: #ff6b6b; margin-top: 10px; display: none;"></p>
+            </form>
         </div>
-    </header>
+    </div>
 
-    <nav>
-        <button class="nav-btn active" onclick="showSection('dashboard')">Dashboard</button>
-        <button class="nav-btn" onclick="showSection('add-student')">Add Student</button>
-        <button class="nav-btn" onclick="showSection('all-students')">All Students</button>
-        <button class="nav-btn" onclick="showSection('check-in')">Check-In</button>
-    </nav>
+    <!-- Main App (hidden until login) -->
+    <div id="main-app" style="display: none;">
+        <header>
+            <div class="header-content">
+                <h1>🏋️ Gym Manager</h1>
+                <p>Student Tracking System</p>
+            </div>
+            <button class="btn btn-logout" onclick="handleLogout()">🚪 Logout</button>
+        </header>
 
-    <main>
+        <nav>
+            <button class="nav-btn active" onclick="showSection('dashboard')">Dashboard</button>
+            <button class="nav-btn" onclick="showSection('add-student')">Add Student</button>
+            <button class="nav-btn" onclick="showSection('all-students')">All Students</button>
+            <button class="nav-btn" onclick="showSection('check-in')">Check-In</button>
+            <button class="nav-btn" onclick="showSection('settings')">⚙️ Settings</button>
+        </nav>
+
+        <main>
         <!-- Dashboard Section -->
         <section id="dashboard" class="section active">
             <h2>📊 Dashboard</h2>
-            
+
             <div class="stats-container">
                 <div class="stat-card">
                     <h3>Total Students</h3>
@@ -63,33 +89,49 @@
         <!-- Add Student Section -->
         <section id="add-student" class="section">
             <h2>➕ Add New Student</h2>
-            
+
+            <div class="excel-upload-container"
+                style="margin-bottom: 2rem; padding: 1.5rem; background: var(--card-bg); border-radius: 12px; border: 1px dashed var(--primary-color);">
+                <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                    <input type="file" id="excel-file" accept=".xlsx, .xls" style="display: none;"
+                        onchange="handleExcelUpload(event)">
+                    <button class="btn btn-primary" onclick="document.getElementById('excel-file').click()"
+                        style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span>📁</span> Choose Excel File
+                    </button>
+                </div>
+            </div>
+
             <form id="add-student-form" onsubmit="addStudent(event)">
                 <div class="form-group">
                     <label for="roll-no">Roll Number *</label>
                     <input type="text" id="roll-no" required placeholder="Enter unique roll number">
                 </div>
-                
+
                 <div class="form-group">
                     <label for="student-name">Full Name *</label>
                     <input type="text" id="student-name" required placeholder="Enter student name">
                 </div>
-                
+
                 <div class="form-group">
-                    <label for="phone">Phone Number *</label>
-                    <input type="tel" id="phone" required placeholder="Enter phone number">
+                    <label for="gender">Gender *</label>
+                    <select id="gender" required>
+                        <option value="">Select gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
                 </div>
-                
+
                 <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" placeholder="Enter email (optional)">
+                    <label for="phone">Mobile Number *</label>
+                    <input type="tel" id="phone" required placeholder="Enter mobile number">
                 </div>
-                
+
                 <div class="form-group">
                     <label for="join-date">Joining Date *</label>
                     <input type="date" id="join-date" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="membership-duration">Membership Duration *</label>
                     <select id="membership-duration" required>
@@ -100,12 +142,12 @@
                         <option value="12">12 Months</option>
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="fee-paid">Fee Paid (₹) *</label>
                     <input type="number" id="fee-paid" required placeholder="Enter amount paid">
                 </div>
-                
+
                 <button type="submit" class="btn btn-primary">Add Student</button>
             </form>
         </section>
@@ -113,24 +155,26 @@
         <!-- All Students Section -->
         <section id="all-students" class="section">
             <h2>👥 All Students</h2>
-            
+
             <div class="search-filter">
-                <input type="text" id="search-input" placeholder="Search by name or roll number..." onkeyup="filterStudents()">
+                <input type="text" id="search-input" placeholder="Search by name, roll no, or phone..."
+                    onkeyup="filterStudents()">
                 <select id="filter-status" onchange="filterStudents()">
                     <option value="all">All Status</option>
                     <option value="active">Active</option>
                     <option value="expired">Expired</option>
                 </select>
             </div>
-            
+
             <div class="table-container">
                 <table id="students-table">
                     <thead>
                         <tr>
                             <th>Roll No</th>
                             <th>Name</th>
-                            <th>Phone</th>
-                            <th>Join Date</th>
+                            <th>Gender</th>
+                            <th>Mobile</th>
+                            <th>DOJ</th>
                             <th>Expiry Date</th>
                             <th>Status</th>
                             <th>Actions</th>
@@ -146,22 +190,54 @@
         <!-- Check-In Section -->
         <section id="check-in" class="section">
             <h2>✅ Student Check-In</h2>
-            
+
             <div class="checkin-container">
                 <div class="checkin-form">
                     <h3>Enter Roll Number to Check-In</h3>
                     <div class="form-group">
-                        <input type="text" id="checkin-roll" placeholder="Enter roll number" onkeypress="handleCheckinKeypress(event)">
+                        <input type="text" id="checkin-roll" placeholder="Enter roll number"
+                            onkeypress="handleCheckinKeypress(event)">
                         <button class="btn btn-primary" onclick="checkInStudent()">Check In</button>
                     </div>
                     <div id="checkin-message"></div>
                 </div>
-                
+
                 <div class="today-checkins">
                     <h3>📋 Today's Check-ins</h3>
                     <div id="checkin-list">
                         <p class="no-data">No check-ins yet today</p>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="section">
+            <h2>⚙️ Settings</h2>
+            
+            <div class="settings-container">
+                <div class="settings-card">
+                    <h3>🔐 Change Login Credentials</h3>
+                    <form onsubmit="changeCredentials(event)">
+                        <div class="form-group">
+                            <label for="current-password">Current Password *</label>
+                            <input type="password" id="current-password" required placeholder="Enter current password">
+                        </div>
+                        <div class="form-group">
+                            <label for="new-username">New Username *</label>
+                            <input type="text" id="new-username" required placeholder="Enter new username">
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">New Password *</label>
+                            <input type="password" id="new-password" required placeholder="Enter new password">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm New Password *</label>
+                            <input type="password" id="confirm-password" required placeholder="Confirm new password">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Credentials</button>
+                        <p id="settings-message" style="margin-top: 10px;"></p>
+                    </form>
                 </div>
             </div>
         </section>
@@ -174,27 +250,30 @@
             <h2>Edit Student</h2>
             <form id="edit-student-form" onsubmit="updateStudent(event)">
                 <input type="hidden" id="edit-roll-no">
-                
+
                 <div class="form-group">
                     <label for="edit-name">Full Name *</label>
                     <input type="text" id="edit-name" required>
                 </div>
-                
+
                 <div class="form-group">
-                    <label for="edit-phone">Phone Number *</label>
+                    <label for="edit-gender">Gender *</label>
+                    <select id="edit-gender" required>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-phone">Mobile Number *</label>
                     <input type="tel" id="edit-phone" required>
                 </div>
-                
-                <div class="form-group">
-                    <label for="edit-email">Email</label>
-                    <input type="email" id="edit-email">
-                </div>
-                
+
                 <div class="form-group">
                     <label for="edit-expiry">Expiry Date *</label>
                     <input type="date" id="edit-expiry" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="extend-membership">Extend Membership</label>
                     <select id="extend-membership">
@@ -205,7 +284,7 @@
                         <option value="12">+ 12 Months</option>
                     </select>
                 </div>
-                
+
                 <button type="submit" class="btn btn-primary">Update Student</button>
             </form>
         </div>
@@ -214,7 +293,10 @@
     <footer>
         <p>© 2025 Gym Manager - Student Tracking System</p>
     </footer>
+    </div> <!-- End of main-app -->
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="script.js"></script>
 </body>
+
 </html>
